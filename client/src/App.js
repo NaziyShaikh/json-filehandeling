@@ -10,7 +10,7 @@ const App = () => {
 
     const handleRegister = async () => {
         try {
-            await axios.post('http://localhost:5000/register', { username, password });
+            await axios.post('https://json-filehandeling.onrender.com/register', { username, password });
             alert('User registered successfully');
         } catch (error) {
             alert('Error registering user: ' + error.response.data.message);
@@ -19,7 +19,7 @@ const App = () => {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post('http://localhost:5000/login', { username, password });
+            const response = await axios.post('https://json-filehandeling.onrender.com/login', { username, password });
             localStorage.setItem('token', response.data.token);
             alert('Login successful');
         } catch (error) {
@@ -30,7 +30,7 @@ const App = () => {
     const handleSaveData = async () => {
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/save', { data: jsonData }, {
+            await axios.post('https://json-filehandeling.onrender.com/save', { data: jsonData }, {
                 headers: { Authorization: token }
             });
             alert('Data saved successfully');
@@ -42,7 +42,7 @@ const App = () => {
     const handleReadData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/read', {
+            const response = await axios.get('https://json-filehandeling.onrender.com/read', {
                 headers: { Authorization: token }
             });
             setResponseData(response.data);
