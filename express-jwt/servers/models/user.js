@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -27,15 +28,4 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-// Add methods or statics if needed
-userSchema.statics.findByCredentials = async (username, password) => {
-    const user = await User.findOne({ username });
-    if (!user) {
-        throw new Error('Invalid login credentials');
-    }
-    return user;
-};
-
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);

@@ -43,21 +43,36 @@ const writeUserData = (data) => {
     fs.writeFileSync(userDataFile, JSON.stringify(data, null, 2));
 };
 
+const User = require('../models/user');
 
-app.post('/register', (req, res) => {
-    const { username, password } = req.body;
-    const users = readUserData();
+app.post('/register', async (req, res) => {
+    try {
+        const { username, password, email } = req.body;
+        
 
+        if (!username || !password || !email) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
 
-    if (users.find(user => user.username === username)) {
-        return res.status(400).json({ message: 'User already exists' });
+    
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Username already exists' });
+        }
+
+    
+        const user = new User({
+            username,
+            password: bcrypt.hashSync(password, 10),
+            email
+        });
+
+        const savedUser = await user.save();
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Registration failed' });
     }
-
-    const hashedPassword = bcrypt.hashSync(password, 8);
-    users.push({ username, password: hashedPassword });
-    writeUserData(users);
-
-    res.status(201).json({ message: 'User registered successfully' });
 });
 
 app.post('/login', (req, res) => {
