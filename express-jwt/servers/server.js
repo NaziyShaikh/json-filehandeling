@@ -4,13 +4,16 @@ const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const cors = require('cors');
-
 const app = express();
-const PORT = process.env.PORT || 5000;
+const authRoutes = require('./routes/auth');
+
+
 const SECRET_KEY = '1234'; 
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.json());
+app.use('/api', authRoutes);
 
 const userDataFile = 'users.json';
 const jsonDataFile = 'data.json';
@@ -87,6 +90,10 @@ app.get('/read', verifyToken, (req, res) => {
     }
     const data = fs.readFileSync(jsonDataFile);
     res.json(JSON.parse(data));
+});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
 
 app.get('/', (req, res) => {
