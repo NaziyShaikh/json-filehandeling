@@ -1,19 +1,32 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const bodyParser = require('body-parser');
-const fs = require('fs');
 const cors = require('cors');
 const app = express();
 const authRoutes = require('./routes/auth');
+const mongoose = require('mongoose');
 
+require('dotenv').config();
 
-const SECRET_KEY = '1234'; 
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log('Connected to MongoDB');
+}).catch((err) => {
+    console.error('MongoDB connection error:', err);
+});
+
+const SECRET_KEY = process.env.JWT_SECRET || '1234';  
 
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.json());
+app.use(express.json());  
 app.use('/api', authRoutes);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 
 const userDataFile = 'users.json';
 const jsonDataFile = 'data.json';
@@ -47,7 +60,6 @@ app.post('/register', (req, res) => {
     res.status(201).json({ message: 'User registered successfully' });
 });
 
-//login of authentication
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     const users = readUserData();
@@ -91,10 +103,7 @@ app.get('/read', verifyToken, (req, res) => {
     const data = fs.readFileSync(jsonDataFile);
     res.json(JSON.parse(data));
 });
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+
 
 app.get('/', (req, res) => {
     res.send('Welcome to the Express Backend API of file handeling ! The server is running.');
