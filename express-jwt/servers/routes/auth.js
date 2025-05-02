@@ -4,6 +4,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
+const SECRET_KEY = process.env.JWT_SECRET || '1234';  // Added this line
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -86,8 +87,9 @@ const verifyToken = (req, res, next) => {
 router.post('/save', verifyToken, async (req, res) => {
     try {
         const { data } = req.body;
-        // Save your data here
-        res.json({ message: 'Data saved successfully' });
+        // Here you would typically save the data to your database
+        // For now, we'll just return a success message
+        res.json({ message: 'Data saved successfully', data });
     } catch (error) {
         res.status(500).json({ error: 'Failed to save data' });
     }
@@ -95,8 +97,9 @@ router.post('/save', verifyToken, async (req, res) => {
 
 router.get('/read', verifyToken, async (req, res) => {
     try {
-        // Read your data here
-        res.json({ message: 'Data read successfully' });
+        // Here you would typically fetch the data from your database
+        // For now, we'll just return a sample response
+        res.json({ message: 'Data read successfully', data: {} });
     } catch (error) {
         res.status(500).json({ error: 'Failed to read data' });
     }

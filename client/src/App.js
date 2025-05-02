@@ -19,6 +19,7 @@ const App = () => {
             });
             alert('User registered successfully');
         } catch (error) {
+            console.error('Registration error:', error);
             alert('Error registering user: ' + error.response?.data?.error || error.message);
         }
     };
@@ -32,6 +33,7 @@ const App = () => {
             localStorage.setItem('token', response.data.token);
             alert('Login successful');
         } catch (error) {
+            console.error('Login error:', error);
             alert('Error logging in: ' + error.response?.data?.error || error.message);
         }
     };
@@ -42,15 +44,17 @@ const App = () => {
             if (!token) {
                 return alert('Please login first');
             }
-            await axios.post(`${API_BASE_URL}/save`, { 
+            const response = await axios.post(`${API_BASE_URL}/save`, { 
                 data: jsonData 
             }, {
                 headers: { 
                     Authorization: `Bearer ${token}`
                 }
             });
+            console.log('Save response:', response.data);
             alert('Data saved successfully');
         } catch (error) {
+            console.error('Save error:', error);
             alert('Error saving data: ' + error.response?.data?.error || error.message);
         }
     };
@@ -66,8 +70,10 @@ const App = () => {
                     Authorization: `Bearer ${token}`
                 }
             });
+            console.log('Read response:', response.data);
             setResponseData(response.data);
         } catch (error) {
+            console.error('Read error:', error);
             alert('Error reading data: ' + error.response?.data?.error || error.message);
         }
     };
@@ -113,6 +119,7 @@ const App = () => {
                     value={jsonData} 
                     onChange={(e) => setJsonData(e.target.value)} 
                     placeholder="Enter JSON data to save"
+                    style={{ width: '100%', height: '100px' }}
                 />
                 <button onClick={handleSaveData}>Save Data</button>
             </div>
@@ -120,7 +127,7 @@ const App = () => {
                 <h2>Read Data</h2>
                 <button onClick={handleReadData}>Read Data</button>
                 {responseData && (
-                    <pre>
+                    <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
                         {JSON.stringify(responseData, null, 2)}
                     </pre>
                 )}
