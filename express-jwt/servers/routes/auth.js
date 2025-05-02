@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const jwt = require('jsonwebtoken');
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -25,7 +26,9 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        res.json({ message: 'Login successful' });
+        // Create JWT token
+        const token = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '1h' });
+        res.json({ token });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
@@ -60,6 +63,42 @@ router.post('/register', async (req, res) => {
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Registration failed' });
+    }
+});
+
+// JWT verification middleware
+const verifyToken = (req, res, next) => {
+    const token = req.headers['authorization'];
+    if (!token) {
+        return res.status(403).json({ error: 'No token provided' });
+    }
+
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        req.user = decoded;
+        next();
+    });
+};
+
+// Protected routes
+router.post('/save', verifyToken, async (req, res) => {
+    try {
+        const { data } = req.body;
+        // Save your data here
+        res.json({ message: 'Data saved successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to save data' });
+    }
+});
+
+router.get('/read', verifyToken, async (req, res) => {
+    try {
+        // Read your data here
+        res.json({ message: 'Data read successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to read data' });
     }
 });
 
