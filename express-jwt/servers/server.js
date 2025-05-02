@@ -1,10 +1,9 @@
+// servers/server.js
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const cors = require('cors');
 const app = express();
 const authRoutes = require('./routes/auth');
 const mongoose = require('mongoose');
+const User = require('./models/user');  
 
 require('dotenv').config();
 
