@@ -9,6 +9,10 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Username and password are required' });
+        }
+
         // Find user
         const user = await User.findOne({ username });
         if (!user) {
@@ -33,13 +37,15 @@ router.post('/register', async (req, res) => {
     try {
         const { username, password, email } = req.body;
         
-        // Validate required fields
         if (!username || !password || !email) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
-        // Clear previous data
-        await User.deleteMany({});
+        // Check if user already exists
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Username already exists' });
+        }
 
         // Create new user
         const hashedPassword = bcrypt.hashSync(password, 10);
