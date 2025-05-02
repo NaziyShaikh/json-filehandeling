@@ -1,9 +1,8 @@
-// servers/server.js
+
 const express = require('express');
 const app = express();
 const authRoutes = require('./routes/auth');
 const mongoose = require('mongoose');
-const User = require('./models/user');  
 
 require('dotenv').config();
 
@@ -101,8 +100,6 @@ const verifyToken = (req, res, next) => {
         next();
     });
 };
-
-//save.json
 app.post('/save', verifyToken, (req, res) => {
     const jsonData = req.body;
 
