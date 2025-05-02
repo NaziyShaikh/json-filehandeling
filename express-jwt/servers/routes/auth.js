@@ -60,13 +60,30 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-// Protected routes
+
 router.post('/save', verifyToken, async (req, res) => {
     try {
         const { data } = req.body;
         res.json({ message: 'Data saved successfully', data });
     } catch (error) {
         res.status(500).json({ error: 'Failed to save data' });
+    }
+});
+
+router.get('/read', verifyToken, async (req, res) => {
+    try {
+        // For now, we'll just return a sample response
+        // In a real application, you would fetch the data from your database
+        res.json({ 
+            message: 'Data read successfully', 
+            data: {
+                username: req.user.username,
+                timestamp: new Date().toISOString(),
+                data: {}  // This would contain the actual saved data
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to read data' });
     }
 });
 

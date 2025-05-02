@@ -65,24 +65,30 @@ const App = () => {
           }
       }
   };
-    const handleReadData = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                return alert('Please login first');
-            }
-            const response = await axios.get(`${API_BASE_URL}/read`, {
-                headers: { 
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            console.log('Read response:', response.data);
-            setResponseData(response.data);
-        } catch (error) {
-            console.error('Read error:', error);
-            alert('Error reading data: ' + error.response?.data?.error || error.message);
+  const handleReadData = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            return alert('Please login first');
         }
-    };
+        
+        const response = await axios.get(`${API_BASE_URL}/read`, {
+            headers: { 
+                Authorization: `Bearer ${token}`
+            }
+        });
+        
+        console.log('Read response:', response.data);
+        setResponseData(response.data.data); 
+    } catch (error) {
+        console.error('Read error:', error);
+        if (error.response?.data?.error) {
+            alert('Error reading data: ' + error.response.data.error);
+        } else {
+            alert('Error reading data: ' + error.message);
+        }
+    }
+};
 
     return (
         <div className="container">
