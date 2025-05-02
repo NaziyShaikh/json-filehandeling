@@ -1,60 +1,60 @@
-
+// servers/routes/auth.js
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const User = require('../models/user');  
+const User = require('../models/user');
 
-router.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    
-    
-    const usersPath = path.join(__dirname, '../data/users.json');
-    let users = [];
-    
+// Login route
+router.post('/login', async (req, res) => {
     try {
-        const data = fs.readFileSync(usersPath);
-        users = JSON.parse(data);
-    } catch (error) {
-        console.log('No existing users file found');
-    }
+        const { username, password } = req.body;
+        
+        // Find user
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
 
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        res.json({ success: true, message: 'Login successful' });
-    } else {
-        res.status(401).json({ success: false, message: 'Invalid credentials' });
+        // Compare passwords
+        const isMatch = bcrypt.compareSync(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        res.json({ message: 'Login successful' });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Login failed' });
     }
 });
 
-
-router.post('/register', (req, res) => {
-    const { username, password } = req.body;
-    
-    
-    const usersPath = path.join(__dirname, '../data/users.json');
-    let users = [];
-    
+// Register route
+router.post('/register', async (req, res) => {
     try {
-        const data = fs.readFileSync(usersPath);
-        users = JSON.parse(data);
+        const { username, password, email } = req.body;
+        
+        // Validate required fields
+        if (!username || !password || !email) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        // Clear previous data
+        await User.deleteMany({});
+
+        // Create new user
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        const user = new User({
+            username,
+            password: hashedPassword,
+            email
+        });
+
+        const savedUser = await user.save();
+        res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
-        console.log('No existing users file found');
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Registration failed' });
     }
-
-    
-    const existingUser = users.find(u => u.username === username);
-    if (existingUser) {
-        return res.status(400).json({ success: false, message: 'Username already exists' });
-    }
-
-    
-    users.push({ username, password });
-    
-    
-    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-    
-    res.json({ success: true, message: 'Registration successful' });
 });
 
 module.exports = router;
