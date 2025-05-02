@@ -1,10 +1,10 @@
-// servers/routes/auth.js
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const Data = require('../models/data');
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = process.env.JWT_SECRET || '1234';  // Make sure this matches your .env file
+const SECRET_KEY = process.env.JWT_SECRET || '1234';
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -60,29 +60,53 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-
+// Protected routes
 router.post('/save', verifyToken, async (req, res) => {
     try {
         const { data } = req.body;
-        res.json({ message: 'Data saved successfully', data });
+        const userId = req.user._id;
+
+        // Create new data entry
+        const savedData = new Data({
+            userId,
+            content: data
+        });
+
+        await savedData.save();
+
+        res.json({ 
+            message: 'Data saved successfully', 
+            data: {
+                id: savedData._id,
+                content: savedData.content,
+                createdAt: savedData.createdAt
+            }
+        });
     } catch (error) {
+        console.error('Save error:', error);
         res.status(500).json({ error: 'Failed to save data' });
     }
 });
 
 router.get('/read', verifyToken, async (req, res) => {
     try {
-        // For now, we'll just return a sample response
-        // In a real application, you would fetch the data from your database
+        const userId = req.user._id;
+        
+        // Find all data entries for this user
+        const dataEntries = await Data.find({ userId })
+            .sort({ createdAt: -1 })
+            .limit(10);  // Limit to last 10 entries
+
         res.json({ 
             message: 'Data read successfully', 
-            data: {
-                username: req.user.username,
-                timestamp: new Date().toISOString(),
-                data: {}  // This would contain the actual saved data
-            }
+            data: dataEntries.map(entry => ({
+                id: entry._id,
+                content: entry.content,
+                createdAt: entry.createdAt
+            }))
         });
     } catch (error) {
+        console.error('Read error:', error);
         res.status(500).json({ error: 'Failed to read data' });
     }
 });
