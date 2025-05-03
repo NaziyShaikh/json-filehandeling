@@ -27,17 +27,23 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Create JWT token
-        const token = jwt.sign({ username: user.username }, SECRET_KEY, { 
-            expiresIn: '1h',
-            algorithm: 'HS256'
+        // Generate token
+        const token = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '1h' });
+        
+        res.json({ 
+            message: 'Login successful', 
+            token,
+            user: {
+                username: user.username,
+                _id: user._id
+            }
         });
-        res.json({ token });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
     }
 });
+
 // JWT verification middleware
 async function verifyToken(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -71,22 +77,46 @@ async function verifyToken(req, res, next) {
 // Protected routes
 router.post('/save', verifyToken, async (req, res) => {
     try {
+        const { content } = req.body;
+        if (!content) {
+            return res.status(400).json({ error: 'Content is required' });
+        }
+
         const data = new Data({
             userId: req.user._id,
-            ...req.body
+            content
         });
+        
         await data.save();
-        res.status(201).json(data);
+        res.status(201).json({
+            message: 'Data saved successfully',
+            data: {
+                id: data._id,
+                content: data.content,
+                createdAt: data.createdAt
+            }
+        });
     } catch (error) {
+        console.error('Save error:', error);
         res.status(500).json({ error: 'Failed to save data' });
     }
 });
 
 router.get('/data', verifyToken, async (req, res) => {
     try {
-        const data = await Data.find({ userId: req.user._id });
-        res.json(data);
+        const data = await Data.find({ userId: req.user._id })
+            .sort({ createdAt: -1 });
+        
+        res.json({
+            message: 'Data retrieved successfully',
+            data: data.map(item => ({
+                id: item._id,
+                content: item.content,
+                createdAt: item.createdAt
+            }))
+        });
     } catch (error) {
+        console.error('Read error:', error);
         res.status(500).json({ error: 'Failed to fetch data' });
     }
 });
