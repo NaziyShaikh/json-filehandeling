@@ -6,6 +6,48 @@ const Data = require('../models/data');
 const jwt = require('jsonwebtoken');
 const SECRET_KEY = process.env.JWT_SECRET || '1234';
 
+// Registration route
+router.post('/register', async (req, res) => {
+    try {
+        const { username, password, email } = req.body;
+        
+        // Validate input
+        if (!username || !password || !email) {
+            return res.status(400).json({ error: 'Username, password, and email are required' });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Username already exists' });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new user
+        const user = new User({
+            username,
+            password: hashedPassword,
+            email
+        });
+
+        await user.save();
+        
+        res.status(201).json({ 
+            message: 'User registered successfully',
+            user: {
+                username: user.username,
+                email: user.email,
+                _id: user._id
+            }
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Failed to register user' });
+    }
+});
+
 // Login route
 router.post('/login', async (req, res) => {
     try {
