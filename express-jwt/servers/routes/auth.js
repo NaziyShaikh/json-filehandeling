@@ -6,26 +6,22 @@ const Data = require('../models/data');
 const jwt = require('jsonwebtoken');
 const SECRET_KEY = process.env.JWT_SECRET || '1234';
 
-// Registration route
 router.post('/register', async (req, res) => {
     try {
         const { username, password, email } = req.body;
         
-        // Validate input
+
         if (!username || !password || !email) {
             return res.status(400).json({ error: 'Username, password, and email are required' });
         }
 
-        // Check if user already exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ error: 'Username already exists' });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create new user
         const user = new User({
             username,
             password: hashedPassword,
@@ -47,8 +43,6 @@ router.post('/register', async (req, res) => {
         res.status(500).json({ error: 'Failed to register user' });
     }
 });
-
-// Login route
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -57,19 +51,16 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Username and password are required' });
         }
 
-        // Find user
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Compare passwords
         const isMatch = bcrypt.compareSync(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Generate token
         const token = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '1h' });
         
         res.json({ 
@@ -86,7 +77,6 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// JWT verification middleware
 async function verifyToken(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -100,7 +90,7 @@ async function verifyToken(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
-        // Find the user to get their _id
+
         const user = await User.findOne({ username: decoded.username });
         if (!user) {
             return res.status(401).json({ error: 'User not found' });
@@ -115,8 +105,6 @@ async function verifyToken(req, res, next) {
         return res.status(401).json({ error: 'Invalid token' });
     }
 };
-
-// Protected routes
 router.post('/save', verifyToken, async (req, res) => {
     try {
         const { content } = req.body;

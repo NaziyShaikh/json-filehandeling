@@ -60,7 +60,7 @@ const App = () => {
 
             console.log('Save response:', response.data);
             alert('Data saved successfully');
-            setJsonData(''); // Clear the input after successful save
+            setJsonData(''); 
         } catch (error) {
             console.error('Save error:', error);
             if (error.response?.data?.error) {
