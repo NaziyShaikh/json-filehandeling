@@ -39,32 +39,37 @@ const App = () => {
           alert('Error logging in: ' + error.response?.data?.error || error.message);
       }
   };
-  
-  const handleSaveData = async () => {
-      try {
-          const token = localStorage.getItem('token');
-          if (!token) {
-              return alert('Please login first');
-          }
-  
-          const response = await axios.post(`${API_BASE_URL}/save`, { 
-              data: jsonData 
-          }, {
-              headers: { 
-                  Authorization: `Bearer ${token}`
-              }
-          });
-          console.log('Save response:', response.data);
-          alert('Data saved successfully');
-      } catch (error) {
-          console.error('Save error:', error);
-          if (error.response?.data?.error) {
-              alert('Error saving data: ' + error.response.data.error);
-          } else {
-              alert('Error saving data: ' + error.message);
-          }
-      }
-  };
+// client/src/App.js
+const handleSaveData = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            return alert('Please login first');
+        }
+
+        if (!jsonData.trim()) {
+            return alert('Please enter some data to save');
+        }
+
+        const response = await axios.post(`${API_BASE_URL}/save`, { 
+            data: jsonData 
+        }, {
+            headers: { 
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        console.log('Save response:', response.data);
+        alert('Data saved successfully');
+    } catch (error) {
+        console.error('Save error:', error);
+        if (error.response?.data?.error) {
+            alert('Error saving data: ' + error.response.data.error);
+        } else {
+            alert('Error saving data: ' + error.message);
+        }
+    }
+};
   const handleReadData = async () => {
     try {
         const token = localStorage.getItem('token');

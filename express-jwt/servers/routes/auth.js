@@ -38,24 +38,32 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ error: 'Login failed' });
     }
 });
-
 // JWT verification middleware
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
+async function verifyToken(req, res, next) {
+    const authHeader = req.headers.authorization;
     if (!authHeader) {
         return res.status(403).json({ error: 'No token provided' });
     }
 
-    const token = authHeader.split(' ')[1];  // Get the token after "Bearer"
+    const token = authHeader.split(' ')[1];
     if (!token) {
         return res.status(403).json({ error: 'No token provided' });
     }
 
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
-        req.user = decoded;
+        // Find the user to get their _id
+        const user = await User.findOne({ username: decoded.username });
+        if (!user) {
+            return res.status(401).json({ error: 'User not found' });
+        }
+        req.user = { 
+            username: decoded.username,
+            _id: user._id
+        };
         next();
     } catch (err) {
+        console.error('Token verification error:', err);
         return res.status(401).json({ error: 'Invalid token' });
     }
 };
@@ -63,51 +71,23 @@ const verifyToken = (req, res, next) => {
 // Protected routes
 router.post('/save', verifyToken, async (req, res) => {
     try {
-        const { data } = req.body;
-        const userId = req.user._id;
-
-        // Create new data entry
-        const savedData = new Data({
-            userId,
-            content: data
+        const data = new Data({
+            userId: req.user._id,
+            ...req.body
         });
-
-        await savedData.save();
-
-        res.json({ 
-            message: 'Data saved successfully', 
-            data: {
-                id: savedData._id,
-                content: savedData.content,
-                createdAt: savedData.createdAt
-            }
-        });
+        await data.save();
+        res.status(201).json(data);
     } catch (error) {
-        console.error('Save error:', error);
         res.status(500).json({ error: 'Failed to save data' });
     }
 });
 
-router.get('/read', verifyToken, async (req, res) => {
+router.get('/data', verifyToken, async (req, res) => {
     try {
-        const userId = req.user._id;
-        
-        // Find all data entries for this user
-        const dataEntries = await Data.find({ userId })
-            .sort({ createdAt: -1 })
-            .limit(10);  // Limit to last 10 entries
-
-        res.json({ 
-            message: 'Data read successfully', 
-            data: dataEntries.map(entry => ({
-                id: entry._id,
-                content: entry.content,
-                createdAt: entry.createdAt
-            }))
-        });
+        const data = await Data.find({ userId: req.user._id });
+        res.json(data);
     } catch (error) {
-        console.error('Read error:', error);
-        res.status(500).json({ error: 'Failed to read data' });
+        res.status(500).json({ error: 'Failed to fetch data' });
     }
 });
 
