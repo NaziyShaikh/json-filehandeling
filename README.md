@@ -1,4 +1,5 @@
-frontend deploy link https://json-filehandeling-1.onrender.com/
+ HERE CLIENT IS A FRONTEND DONT CONFUSE  WITH A NAME 
+ frontend deploy link https://json-filehandeling-1.onrender.com/
 
  backend deploy link https://json-filehandeling.onrender.com/
 
